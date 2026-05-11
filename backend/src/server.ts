@@ -1,27 +1,31 @@
 import Fastify from 'fastify';
-import  { prisma }  from './lib/prisma';
+import cors from '@fastify/cors';
+import { prisma } from './lib/prisma';
 import { z } from 'zod';
 
-const fastify = Fastify({ logger: true });
+export const app = Fastify({ logger: true });
 
-// GET: Listar todas
-fastify.get('/tasks', async () => {
+await app.register(cors, {
+  origin: '*',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+});
+
+app.get('/tasks', async () => {
   return await prisma.task.findMany({ orderBy: { createdAt: 'desc' } });
 });
 
-// POST: Criar tarefa
-fastify.post('/tasks', async (request, reply) => {
+app.post('/tasks', async (request, reply) => {
   const createTaskSchema = z.object({
     title: z.string(),
     description: z.string().optional(),
   });
+  
   const { title, description } = createTaskSchema.parse(request.body);
   const task = await prisma.task.create({ data: { title, description } });
   return reply.status(201).send(task);
 });
 
-// PATCH: Atualizar status/dados
-fastify.patch('/tasks/:id', async (request) => {
+app.patch('/tasks/:id', async (request) => {
   const { id } = request.params as { id: string };
   const updateSchema = z.object({
     completed: z.boolean().optional(),
@@ -31,11 +35,15 @@ fastify.patch('/tasks/:id', async (request) => {
   return await prisma.task.update({ where: { id }, data });
 });
 
-// DELETE: Remover
-fastify.delete('/tasks/:id', async (request, reply) => {
+app.delete('/tasks/:id', async (request, reply) => {
   const { id } = request.params as { id: string };
   await prisma.task.delete({ where: { id } });
   return reply.status(204).send();
 });
 
-fastify.listen({ port: 3333 });
+if (process.env.NODE_ENV !== 'test') {
+  app.listen({ port: 3333 }).catch((err) => {
+    app.log.error(err);
+    process.exit(1);
+  });
+}
