@@ -1,0 +1,26 @@
+### Variáveis
+@baseUrl = http://localhost:3333
+
+### Criar uma tarefa
+# @name createTask
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Estudar Node.js",
+  "description": "Focar em integração de API"
+}
+
+### Listar todas as tarefas
+GET {{baseUrl}}/tasks
+
+### Atualizar status da tarefa 
+PATCH {{baseUrl}}/tasks/09bf2c0c-efe8-4ea8-8a99-d7573ce7faae
+Content-Type: application/json
+
+{
+  "completed": true
+}
+
+### Deletar tarefa
+DELETE {{baseUrl}}/tasks/09bf2c0c-efe8-4ea8-8a99-d7573ce7faae
