@@ -29,6 +29,27 @@ export function App() {
     fetchTasks();
   }
 
+  async function toggleTaskStatus(id: string, completed: boolean) {
+    try {
+      await api.patch(`/tasks/${id}`, { completed: !completed });
+      await fetchTasks();
+    } catch (error) {
+      console.error("Erro ao atualizar tarefa:", error);
+      alert("Não foi possível atualizar o status da tarefa.");
+    }
+  }
+
+  async function deleteTask(id: string) {
+    if (!confirm("Tem certeza que deseja excluir esta tarefa?")) return;
+    try {
+      await api.delete(`/tasks/${id}`);
+      await fetchTasks();
+    } catch (error) {
+      console.error("Erro ao deletar tarefa:", error);
+      alert("Houve um erro ao excluir a tarefa.");
+    }
+  }
+
   useEffect(() => { fetchTasks(); }, []);
 
   return (
@@ -70,7 +91,7 @@ export function App() {
             />
           </div>
         </header>
-        
+
         <section className="mb-10">
           <form
             onSubmit={handleCreateTask}
@@ -95,6 +116,29 @@ export function App() {
             </div>
           </form>
         </section>
+        {filteredTasks.map(task => (
+          <div key={task.id} className="group bg-[#161925] p-5 rounded-2xl border border-slate-800 flex items-center justify-between hover:border-indigo-500/30 hover:bg-[#1a1e2d] transition-all duration-300">
+            <div className="flex items-center gap-5">
+              <button onClick={() => toggleTaskStatus(task.id, task.completed)} className="transition-transform active:scale-90">
+                {task.completed ? <CheckCircle2 className="text-indigo-500" size={26} /> : <Circle size={26} className="text-slate-700 group-hover:text-indigo-400 transition-colors" />}
+              </button>
+              <div>
+                <h3 className={`text-lg font-semibold transition-all ${task.completed ? 'line-through text-slate-600' : 'text-slate-200'}`}>
+                  {task.title}
+                </h3>
+                {/* Badge de prioridade fixa como exemplo do design */}
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-tighter font-black">Prioridade Baixa</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+              <button className="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-slate-200 transition-colors"><MoreVertical size={20} /></button>
+              <button onClick={() => deleteTask(task.id)} className="p-2 hover:bg-red-500/10 rounded-lg text-slate-500 hover:text-red-500 transition-colors"><Trash2 size={20} /></button>
+            </div>
+          </div>
+        ))}
       </main>
     </div>
 
