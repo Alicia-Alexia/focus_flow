@@ -21,6 +21,14 @@ export function App() {
     setTasks(res.data);
   }
 
+  async function handleCreateTask(e: React.SyntheticEvent) {
+    e.preventDefault();
+    if (!title.trim()) return;
+    await api.post('/tasks', { title });
+    setTitle('');
+    fetchTasks();
+  }
+
   useEffect(() => { fetchTasks(); }, []);
 
   return (
@@ -45,7 +53,7 @@ export function App() {
           </button>
         </nav>
       </aside>
-      
+
       <main className="flex-1 p-10 overflow-y-auto">
         <header className="flex justify-between items-center mb-10">
           <div>
@@ -62,6 +70,31 @@ export function App() {
             />
           </div>
         </header>
+        
+        <section className="mb-10">
+          <form
+            onSubmit={handleCreateTask}
+            className="bg-[#1c2130] p-3 rounded-2xl border border-slate-800 shadow-2xl focus-within:border-indigo-500/40 focus-within:ring-1 focus-within:ring-indigo-500/40 transition-all duration-300"
+          >
+            <div className="flex items-center gap-2">
+              <div className="bg-[#242938] p-3 rounded-xl ml-1">
+                <Plus className="text-indigo-500" size={20} />
+              </div>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="bg-transparent flex-1 outline-none px-2 text-base text-white placeholder:text-slate-600 tracking-wide"
+                placeholder="Adicione uma nova tarefa para hoje..."
+              />
+              <button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-900/20 active:scale-95 whitespace-nowrap"
+              >
+                Criar Tarefa
+              </button>
+            </div>
+          </form>
+        </section>
       </main>
     </div>
 
