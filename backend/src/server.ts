@@ -25,14 +25,22 @@ app.post('/tasks', async (request, reply) => {
   return reply.status(201).send(task);
 });
 
+// backend/src/server.ts
 app.patch('/tasks/:id', async (request) => {
   const { id } = request.params as { id: string };
+  
   const updateSchema = z.object({
-    completed: z.boolean().optional(),
     title: z.string().optional(),
+    description: z.string().optional(),
+    completed: z.boolean().optional(),
   });
+
   const data = updateSchema.parse(request.body);
-  return await prisma.task.update({ where: { id }, data });
+
+  return await prisma.task.update({
+    where: { id },
+    data, 
+  });
 });
 
 app.delete('/tasks/:id', async (request, reply) => {
