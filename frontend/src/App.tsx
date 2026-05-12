@@ -45,7 +45,26 @@ export function App() {
           </button>
         </nav>
       </aside>
+      
+      <main className="flex-1 p-10 overflow-y-auto">
+        <header className="flex justify-between items-center mb-10">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-1">Hoje</h1>
+            <p className="text-slate-500 font-medium">Terça-feira, 12 de Maio</p>
+          </div>
+          <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-slate-600 transition-colors">
+            <Search size={18} className="text-slate-500" />
+            <input
+              className="bg-transparent outline-none text-sm placeholder:text-slate-600"
+              placeholder="Buscar tarefas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </header>
+      </main>
     </div>
+
   );
 }
 
