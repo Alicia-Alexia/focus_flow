@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Search } from 'lucide-react';
-
-// Importando nossos novos componentes
 import { Sidebar } from './components/Sidebar';
 import { TaskInput } from './components/TaskInput';
 import { TaskCard } from './components/TaskCard';
+import { KanbanBoard } from './components/KanbanBoard';
 
 const api = axios.create({ baseURL: 'http://localhost:3333' });
 
@@ -20,9 +19,14 @@ export function App() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
 
-  const filteredTasks = tasks.filter(task =>
-    task.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (currentTab === 'today') {
+      return matchesSearch && task.isPriority && !task.completed;
+    }
+    return matchesSearch;
+  });
 
   async function fetchTasks() {
     try {
@@ -36,20 +40,42 @@ export function App() {
     if (!title.trim()) return;
     try {
       await api.post('/tasks', { title, description });
-      setTitle(''); setDescription(''); fetchTasks();
+      setTitle('');
+      setDescription('');
+      fetchTasks();
     } catch (error) { console.error(error); }
   }
 
   async function handleUpdateTask(id: string) {
     try {
       await api.patch(`/tasks/${id}`, { title: editTitle, description: editDescription });
-      setEditingId(null); fetchTasks();
+      setEditingId(null);
+      fetchTasks();
     } catch (error) { alert("Erro ao salvar"); }
   }
 
   async function toggleTaskStatus(id: string, completed: boolean) {
-    await api.patch(`/tasks/${id}`, { completed: !completed });
-    fetchTasks();
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    try {
+      if (currentTab === 'upcoming') {
+        if (!task.isDoing && !task.completed) {
+          await api.patch(`/tasks/${id}`, { isDoing: true });
+        } else if (task.isDoing && !task.completed) {
+          await api.patch(`/tasks/${id}`, { isDoing: false, completed: true });
+        } else if (task.completed) {
+          await api.patch(`/tasks/${id}`, { completed: false, isDoing: false });
+        }
+      }
+      else {
+        await api.patch(`/tasks/${id}`, { completed: !completed });
+      }
+
+      await fetchTasks();
+    } catch (error) {
+      console.error("Erro ao transicionar status:", error);
+    }
   }
 
   async function deleteTask(id: string) {
@@ -63,6 +89,47 @@ export function App() {
     setEditTitle(task.title);
     setEditDescription(task.description || '');
   }
+
+  async function handleToggleDoing(id: string, currentIsDoing: boolean) {
+    try {
+      await api.patch(`/tasks/${id}`, { isDoing: !currentIsDoing });
+      await fetchTasks();
+    } catch (error) {
+      console.error("Erro ao mudar para progresso:", error);
+    }
+  }
+
+  async function handleTogglePriority(id: string, currentPriority: boolean) {
+    try {
+      await api.patch(`/tasks/${id}`, { isPriority: !currentPriority });
+      await fetchTasks();
+    } catch (error) {
+      console.error("Erro ao atualizar prioridade:", error);
+    }
+  }
+
+  const inputProps = {
+    title,
+    setTitle,
+    description,
+    setDescription,
+    handleCreateTask
+  };
+
+  const cardProps = {
+    editingId,
+    editTitle,
+    setEditTitle,
+    editDescription,
+    setEditDescription,
+    toggleTaskStatus,
+    deleteTask,
+    startEditing,
+    handleUpdateTask,
+    cancelEditing: () => setEditingId(null),
+    handleToggleDoing,
+    handleTogglePriority
+  };
 
   useEffect(() => { fetchTasks(); }, []);
 
@@ -78,7 +145,7 @@ export function App() {
             </h1>
             <p className="text-slate-500 font-medium">Terça-feira, 12 de Maio</p>
           </div>
-          
+
           <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-slate-600 transition-colors">
             <Search size={18} className="text-slate-500" />
             <input
@@ -90,38 +157,32 @@ export function App() {
           </div>
         </header>
 
-        {currentTab === 'today' && (
-          <TaskInput 
-            title={title} setTitle={setTitle} 
-            description={description} setDescription={setDescription} 
-            handleCreateTask={handleCreateTask} 
+        {currentTab === 'today' ? (
+          <div className="grid gap-4">
+            <TaskInput {...inputProps} />
+
+            <div className="flex items-center justify-between px-2 mb-2 mt-4">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                Minhas Prioridades
+              </span>
+            </div>
+
+            {filteredTasks.length > 0 ? (
+              filteredTasks.map(task => (
+                <TaskCard key={task.id} task={task} {...cardProps} />
+              ))
+            ) : (
+              <div className="text-center py-20 bg-[#161925] rounded-3xl border border-dashed border-slate-800 text-slate-600">
+                Nenhuma prioridade para hoje.
+              </div>
+            )}
+          </div>
+        ) : (
+          <KanbanBoard
+            tasks={filteredTasks}
+            {...cardProps}
           />
         )}
-
-        <div className="grid gap-4">
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map(task => (
-              <TaskCard 
-                key={task.id}
-                task={task}
-                editingId={editingId}
-                editTitle={editTitle}
-                setEditTitle={setEditTitle}
-                editDescription={editDescription}
-                setEditDescription={setEditDescription}
-                toggleTaskStatus={toggleTaskStatus}
-                deleteTask={deleteTask}
-                startEditing={startEditing}
-                handleUpdateTask={handleUpdateTask}
-                cancelEditing={() => setEditingId(null)}
-              />
-            ))
-          ) : (
-            <div className="text-center py-20 bg-[#161925] rounded-3xl border border-dashed border-slate-800 text-slate-600">
-              Nenhuma tarefa encontrada.
-            </div>
-          )}
-        </div>
       </main>
     </div>
   );
