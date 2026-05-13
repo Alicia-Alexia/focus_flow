@@ -1,26 +1,46 @@
 ### Variáveis
 @baseUrl = http://localhost:3333
 
-### Criar uma tarefa
+### Listar todas as tarefas
+GET {{baseUrl}}/tasks
+Content-Type: application/json
+
+### Criar uma nova tarefa (com descrição)
 # @name createTask
 POST {{baseUrl}}/tasks
 Content-Type: application/json
 
 {
-  "title": "Estudar Node.js",
-  "description": "Focar em integração de API"
+  "title": "Treinar recepção de vôlei",
+  "description": "Focar em manter o braço estendido e base baixa"
 }
 
-### Listar todas as tarefas
-GET {{baseUrl}}/tasks
+### Armazenar o ID da tarefa criada para os próximos testes
+@taskId = {{createTask.response.body.id}}
 
-### Atualizar status da tarefa 
-PATCH {{baseUrl}}/tasks/09bf2c0c-efe8-4ea8-8a99-d7573ce7faae
+### Atualizar tarefa para 'Em Progresso' (Kanban)
+PATCH {{baseUrl}}/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "isDoing": true
+}
+
+### Marcar como Prioridade (Aba Hoje)
+PATCH {{baseUrl}}/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "isPriority": true
+}
+
+### Concluir a tarefa
+PATCH {{baseUrl}}/tasks/{{taskId}}
 Content-Type: application/json
 
 {
   "completed": true
 }
 
-### Deletar tarefa
-DELETE {{baseUrl}}/tasks/09bf2c0c-efe8-4ea8-8a99-d7573ce7faae
+### Deletar a tarefa
+DELETE {{baseUrl}}/tasks/{{taskId}}
