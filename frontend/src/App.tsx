@@ -1,14 +1,16 @@
-import { useEffect, useState, useMemo } from 'react'; // Adicionado useMemo para performance
+import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { Search } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { TaskInput } from './components/TaskInput';
 import { TaskCard } from './components/TaskCard';
 import { KanbanBoard } from './components/KanbanBoard';
+import { DeleteModal } from './components/DeleteModal';
 
 const api = axios.create({ baseURL: 'http://localhost:3333' });
 
 export function App() {
+  
   const [tasks, setTasks] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -18,6 +20,9 @@ export function App() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<{ id: string, title: string } | null>(null);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -34,29 +39,30 @@ export function App() {
     try {
       const res = await api.get('/tasks');
       setTasks(res.data);
-    } catch (error) { console.error("Erro ao buscar tarefas:", error); }
+    } catch (error) {
+      console.error("Erro ao buscar tarefas:", error);
+    }
   }
 
   async function handleCreateTask(e: React.SyntheticEvent) {
-  e.preventDefault();
-  if (!title.trim()) return;
+    e.preventDefault();
+    if (!title.trim()) return;
+    const priorityStatus = currentTab === 'today';
 
-  const priorityStatus = currentTab === 'today';
-
-  try {
-    await api.post('/tasks', { 
-      title, 
-      description: description || "",
-      isPriority: priorityStatus 
-    });
-    
-    setTitle('');
-    setDescription('');
-    fetchTasks();
-  } catch (error) {
-    console.error("Erro ao criar tarefa:", error);
+    try {
+      await api.post('/tasks', { 
+        title, 
+        description: description || "",
+        isPriority: priorityStatus 
+      });
+      
+      setTitle('');
+      setDescription('');
+      fetchTasks();
+    } catch (error) {
+      console.error("Erro ao criar tarefa:", error);
+    }
   }
-}
 
   async function handleUpdateTask(id: string) {
     try {
@@ -66,7 +72,9 @@ export function App() {
       });
       setEditingId(null);
       fetchTasks();
-    } catch (error) { alert("Erro ao salvar"); }
+    } catch (error) {
+      console.error("Erro ao atualizar:", error);
+    }
   }
 
   async function toggleTaskStatus(id: string, completed: boolean) {
@@ -75,7 +83,6 @@ export function App() {
 
     try {
       if (currentTab === 'upcoming') {
-        // Workflow Inteligente para o Kanban
         if (!task.isDoing && !task.completed) {
           await api.patch(`/tasks/${id}`, { isDoing: true });
         } else if (task.isDoing && !task.completed) {
@@ -84,7 +91,6 @@ export function App() {
           await api.patch(`/tasks/${id}`, { completed: false, isDoing: false });
         }
       } else {
-        // Comportamento normal na aba Hoje
         await api.patch(`/tasks/${id}`, { completed: !completed });
       }
       await fetchTasks();
@@ -93,12 +99,21 @@ export function App() {
     }
   }
 
-  async function deleteTask(id: string) {
-    if (!confirm("Excluir?")) return;
+  function openDeleteModal(task: { id: string, title: string }) {
+    setTaskToDelete(task);
+    setIsDeleteModalOpen(true);
+  }
+
+  async function confirmDelete() {
+    if (!taskToDelete) return;
     try {
-      await api.delete(`/tasks/${id}`);
+      await api.delete(`/tasks/${taskToDelete.id}`);
+      setIsDeleteModalOpen(false);
+      setTaskToDelete(null);
       fetchTasks();
-    } catch (error) { console.error("Erro ao excluir:", error); }
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+    }
   }
 
   function startEditing(task: any) {
@@ -131,9 +146,13 @@ export function App() {
 
   const cardProps = {
     editingId, editTitle, setEditTitle, editDescription, setEditDescription,
-    toggleTaskStatus, deleteTask, startEditing, handleUpdateTask,
+    toggleTaskStatus, startEditing, handleUpdateTask,
     cancelEditing: () => setEditingId(null),
-    handleToggleDoing, handleTogglePriority
+    handleToggleDoing, handleTogglePriority,
+    deleteTask: (id: string) => {
+      const task = tasks.find(t => t.id === id);
+      if (task) openDeleteModal({ id: task.id, title: task.title });
+    },
   };
 
   useEffect(() => { fetchTasks(); }, []);
@@ -148,7 +167,7 @@ export function App() {
             <h1 className="text-4xl font-bold text-white mb-1">
               {currentTab === 'today' ? 'Hoje' : 'Próximos'}
             </h1>
-            <p className="text-slate-500 font-medium">Terça-feira, 12 de Maio</p>
+            <p className="text-slate-500 font-medium tracking-tight">Terça-feira, 12 de Maio</p>
           </div>
 
           <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-slate-600 transition-colors">
@@ -162,9 +181,8 @@ export function App() {
           </div>
         </header>
 
-        {/* O Input agora tem um espaçamento melhor dependendo da aba */}
         <div className={currentTab === 'upcoming' ? 'mb-12' : 'mb-6'}>
-           <TaskInput {...inputProps} />
+          <TaskInput {...inputProps} />
         </div>
 
         {currentTab === 'today' ? (
@@ -188,6 +206,16 @@ export function App() {
         ) : (
           <KanbanBoard tasks={filteredTasks} {...cardProps} />
         )}
+
+        <DeleteModal 
+          isOpen={isDeleteModalOpen}
+          taskTitle={taskToDelete?.title || ""}
+          onConfirm={confirmDelete}
+          onCancel={() => {
+            setIsDeleteModalOpen(false);
+            setTaskToDelete(null);
+          }}
+        />
       </main>
     </div>
   );
