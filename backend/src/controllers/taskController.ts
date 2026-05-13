@@ -11,14 +11,15 @@ export class TaskController {
 
   async create(request: FastifyRequest, reply: FastifyReply) {
     const createSchema = z.object({
-      title: z.string(),
-      description: z.string().optional(),
-    });
+  title: z.string(),
+  description: z.string().optional(),
+  isPriority: z.boolean().optional().default(false), // Garante o tratamento do booleano
+});
 
-    const { title, description } = createSchema.parse(request.body);
+    const { title, description, isPriority } = createSchema.parse(request.body);
 
     const task = await prisma.task.create({
-      data: { title, description }
+      data: { title, description, isPriority}
     });
 
     return reply.status(201).send(task);
