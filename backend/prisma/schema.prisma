@@ -17,5 +17,7 @@ model Task {
   title       String
   description String?
   completed   Boolean  @default(false)
+  isDoing     Boolean  @default(false) 
+  isPriority  Boolean  @default(false) 
   createdAt   DateTime @default(now())
 }
