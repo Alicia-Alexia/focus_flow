@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react'; // Adicionado useMemo para performance
 import axios from 'axios';
 import { Search } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
@@ -19,36 +19,51 @@ export function App() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
 
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (currentTab === 'today') {
-      return matchesSearch && task.isPriority && !task.completed;
-    }
-    return matchesSearch;
-  });
+      if (currentTab === 'today') {
+        return matchesSearch && task.isPriority && !task.completed;
+      }
+      return matchesSearch;
+    });
+  }, [tasks, searchQuery, currentTab]);
 
   async function fetchTasks() {
     try {
       const res = await api.get('/tasks');
       setTasks(res.data);
-    } catch (error) { console.error(error); }
+    } catch (error) { console.error("Erro ao buscar tarefas:", error); }
   }
 
   async function handleCreateTask(e: React.SyntheticEvent) {
-    e.preventDefault();
-    if (!title.trim()) return;
-    try {
-      await api.post('/tasks', { title, description });
-      setTitle('');
-      setDescription('');
-      fetchTasks();
-    } catch (error) { console.error(error); }
+  e.preventDefault();
+  if (!title.trim()) return;
+
+  const priorityStatus = currentTab === 'today';
+
+  try {
+    await api.post('/tasks', { 
+      title, 
+      description: description || "",
+      isPriority: priorityStatus 
+    });
+    
+    setTitle('');
+    setDescription('');
+    fetchTasks();
+  } catch (error) {
+    console.error("Erro ao criar tarefa:", error);
   }
+}
 
   async function handleUpdateTask(id: string) {
     try {
-      await api.patch(`/tasks/${id}`, { title: editTitle, description: editDescription });
+      await api.patch(`/tasks/${id}`, { 
+        title: editTitle, 
+        description: editDescription 
+      });
       setEditingId(null);
       fetchTasks();
     } catch (error) { alert("Erro ao salvar"); }
@@ -60,6 +75,7 @@ export function App() {
 
     try {
       if (currentTab === 'upcoming') {
+        // Workflow Inteligente para o Kanban
         if (!task.isDoing && !task.completed) {
           await api.patch(`/tasks/${id}`, { isDoing: true });
         } else if (task.isDoing && !task.completed) {
@@ -67,11 +83,10 @@ export function App() {
         } else if (task.completed) {
           await api.patch(`/tasks/${id}`, { completed: false, isDoing: false });
         }
-      }
-      else {
+      } else {
+        // Comportamento normal na aba Hoje
         await api.patch(`/tasks/${id}`, { completed: !completed });
       }
-
       await fetchTasks();
     } catch (error) {
       console.error("Erro ao transicionar status:", error);
@@ -80,8 +95,10 @@ export function App() {
 
   async function deleteTask(id: string) {
     if (!confirm("Excluir?")) return;
-    await api.delete(`/tasks/${id}`);
-    fetchTasks();
+    try {
+      await api.delete(`/tasks/${id}`);
+      fetchTasks();
+    } catch (error) { console.error("Erro ao excluir:", error); }
   }
 
   function startEditing(task: any) {
@@ -109,26 +126,14 @@ export function App() {
   }
 
   const inputProps = {
-    title,
-    setTitle,
-    description,
-    setDescription,
-    handleCreateTask
+    title, setTitle, description, setDescription, handleCreateTask
   };
 
   const cardProps = {
-    editingId,
-    editTitle,
-    setEditTitle,
-    editDescription,
-    setEditDescription,
-    toggleTaskStatus,
-    deleteTask,
-    startEditing,
-    handleUpdateTask,
+    editingId, editTitle, setEditTitle, editDescription, setEditDescription,
+    toggleTaskStatus, deleteTask, startEditing, handleUpdateTask,
     cancelEditing: () => setEditingId(null),
-    handleToggleDoing,
-    handleTogglePriority
+    handleToggleDoing, handleTogglePriority
   };
 
   useEffect(() => { fetchTasks(); }, []);
@@ -149,7 +154,7 @@ export function App() {
           <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-slate-600 transition-colors">
             <Search size={18} className="text-slate-500" />
             <input
-              className="bg-transparent outline-none text-sm placeholder:text-slate-600"
+              className="bg-transparent outline-none text-sm placeholder:text-slate-600 w-full"
               placeholder="Buscar tarefas..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -157,11 +162,14 @@ export function App() {
           </div>
         </header>
 
+        {/* O Input agora tem um espaçamento melhor dependendo da aba */}
+        <div className={currentTab === 'upcoming' ? 'mb-12' : 'mb-6'}>
+           <TaskInput {...inputProps} />
+        </div>
+
         {currentTab === 'today' ? (
           <div className="grid gap-4">
-            <TaskInput {...inputProps} />
-
-            <div className="flex items-center justify-between px-2 mb-2 mt-4">
+            <div className="flex items-center justify-between px-2 mb-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                 Minhas Prioridades
               </span>
@@ -178,10 +186,7 @@ export function App() {
             )}
           </div>
         ) : (
-          <KanbanBoard
-            tasks={filteredTasks}
-            {...cardProps}
-          />
+          <KanbanBoard tasks={filteredTasks} {...cardProps} />
         )}
       </main>
     </div>
