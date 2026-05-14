@@ -26,12 +26,11 @@ export class AuthService {
 
   async generateRecoveryToken(email: string) {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return null; // Retornamos null para manter a segurança no controller
+    if (!user) return null; 
 
     const token = randomBytes(20).toString('hex');
-    const expires = new Date(Date.now() + 3600000); // 1 hora de validade
+    const expires = new Date(Date.now() + 3600000); 
 
-    // Aqui você deve ter resetToken e resetExpires no seu schema.prisma
     await prisma.user.update({
       where: { id: user.id },
       data: { 
@@ -47,7 +46,7 @@ export class AuthService {
     const user = await prisma.user.findFirst({
       where: {
         resetToken: token,
-        resetExpires: { gt: new Date() } // Verifica se não expirou
+        resetExpires: { gt: new Date() } 
       }
     });
 

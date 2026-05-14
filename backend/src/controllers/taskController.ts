@@ -17,6 +17,21 @@ export class TaskController {
     }
   }
 
+  async getById(request: FastifyRequest, reply: FastifyReply) {
+  const paramsSchema = z.object({ id: z.string().uuid() });
+  const querySchema = z.object({ userId: z.string().uuid() });
+
+  try {
+    const { id } = paramsSchema.parse(request.params);
+    const { userId } = querySchema.parse(request.query);
+    
+    const task = await taskService.findById(id, userId);
+    return reply.status(200).send(task);
+  } catch (error: any) {
+    return reply.status(404).send({ message: error.message });
+  }
+}
+
   async create(request: FastifyRequest, reply: FastifyReply) {
     const createSchema = z.object({
       title: z.string(),
@@ -35,14 +50,14 @@ export class TaskController {
   }
 
   async update(request: FastifyRequest, reply: FastifyReply) {
-    const paramsSchema = z.object({ id: z.string().uuid() });
+    const paramsSchema = z.object({ id: z.uuid() });
     const bodySchema = z.object({
       title: z.string().optional(),
       description: z.string().optional(),
       completed: z.boolean().optional(),
       isDoing: z.boolean().optional(),
       isPriority: z.boolean().optional(),
-      userId: z.uuid() // Necessário para validar o dono
+      userId: z.uuid() 
     });
 
     try {

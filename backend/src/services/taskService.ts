@@ -18,10 +18,19 @@ export interface UpdateTaskDTO {
 export class TaskService {
   async listByUser(userId: string) {
     return await prisma.task.findMany({
-      where: { userId }, // Segurança: lista apenas as tarefas do dono
+      where: { userId }, 
       orderBy: { createdAt: 'desc' }
     });
   }
+
+  async findById(id: string, userId: string) {
+  const task = await prisma.task.findFirst({
+    where: { id, userId } 
+  });
+
+  if (!task) throw new Error('Tarefa não encontrada.');
+  return task;
+}
 
   async create(data: CreateTaskDTO) {
     return await prisma.task.create({
@@ -29,13 +38,12 @@ export class TaskService {
         title: data.title,
         description: data.description,
         isPriority: data.isPriority,
-        userId: data.userId // Vincula ao usuário logado
+        userId: data.userId 
       }
     });
   }
 
   async update(id: string, userId: string, data: UpdateTaskDTO) {
-    // Verificamos se a tarefa existe e pertence ao usuário antes de atualizar
     return await prisma.task.update({
       where: { id, userId },
       data,
