@@ -42,6 +42,10 @@ Content-Type: application/json
 ### Listar Tarefas do Usuário
 GET {{baseUrl}}/tasks?userId={{userId}}
 
+### Buscar tarefa específica por ID
+# Substitua pelo ID de uma task que você criou e pelo seu userId
+GET {{baseUrl}}/tasks/ID_DA_SUA_TAREFA_AQUI?userId={{userId}}
+
 ### Criar Nova Tarefa (Com prioridade se for na aba 'Hoje')
 POST {{baseUrl}}/tasks
 Content-Type: application/json
