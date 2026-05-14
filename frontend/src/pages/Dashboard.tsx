@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
+import { Search, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { authService } from '../services/auth';
 
@@ -24,6 +25,12 @@ export function Dashboard() {
   const [taskToDelete, setTaskToDelete] = useState<{ id: string, title: string } | null>(null);
 
   const user = authService.getUser();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    authService.logout();
+    navigate('/login');
+  }
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -51,13 +58,13 @@ export function Dashboard() {
     const priorityStatus = currentTab === 'today';
 
     try {
-      await api.post('/tasks', { 
-        title, 
+      await api.post('/tasks', {
+        title,
         description: description || "",
         isPriority: priorityStatus,
-        userId: user.id 
+        userId: user.id
       });
-      
+
       setTitle('');
       setDescription('');
       fetchTasks();
@@ -69,8 +76,8 @@ export function Dashboard() {
   async function handleUpdateTask(id: string) {
     if (!user?.id) return;
     try {
-      await api.patch(`/tasks/${id}`, { 
-        title: editTitle, 
+      await api.patch(`/tasks/${id}`, {
+        title: editTitle,
         description: editDescription,
         userId: user.id
       });
@@ -87,7 +94,7 @@ export function Dashboard() {
 
     try {
       const basePayload = { userId: user.id };
-      
+
       if (currentTab === 'upcoming') {
         if (!task.isDoing && !task.completed) {
           await api.patch(`/tasks/${id}`, { ...basePayload, isDoing: true });
@@ -136,7 +143,7 @@ export function Dashboard() {
       console.error("Erro ao atualizar prioridade:", error);
     }
   }
-  
+
   function openDeleteModal(task: { id: string, title: string }) {
     setTaskToDelete(task);
     setIsDeleteModalOpen(true);
@@ -176,14 +183,23 @@ export function Dashboard() {
             </h1>
             <p className="text-slate-500 font-medium tracking-tight">Terça-feira, 12 de Maio</p>
           </div>
-          <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-slate-600 transition-colors">
-            <Search size={18} className="text-slate-500" />
-            <input
-              className="bg-transparent outline-none text-sm placeholder:text-slate-600 w-full"
-              placeholder="Buscar tarefas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex flex-col items-end gap-4">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-400 transition-all group"
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">Sair da conta</span>
+              <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+            <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-slate-600 transition-colors">
+              <Search size={18} className="text-slate-500" />
+              <input
+                className="bg-transparent outline-none text-sm placeholder:text-slate-600 w-full"
+                placeholder="Buscar tarefas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </header>
 
@@ -212,7 +228,7 @@ export function Dashboard() {
           <KanbanBoard tasks={filteredTasks} {...cardProps} />
         )}
 
-        <DeleteModal 
+        <DeleteModal
           isOpen={isDeleteModalOpen}
           taskTitle={taskToDelete?.title || ""}
           onConfirm={confirmDelete}
