@@ -1,46 +1,67 @@
 ### Variáveis
+### Configurações
 @baseUrl = http://localhost:3333
+@userId = SEU_USER_ID_AQUI
 
-### Listar todas as tarefas
-GET {{baseUrl}}/tasks
+# ==========================================
+# AUTHENTICATION
+# ==========================================
+
+### Criar Novo Usuário (Register)
+POST {{baseUrl}}/users
 Content-Type: application/json
 
-### Criar uma nova tarefa (com descrição)
-# @name createTask
+{
+  "name": "Testando",
+  "email": "contato@teste.com",
+  "password": "senha_segura_123"
+}
+
+### Realizar Login
+# @name login
+POST {{baseUrl}}/sessions
+Content-Type: application/json
+
+{
+  "email": "contato@teste.com",
+  "password": "senha_segura_123"
+}
+
+### Esqueci minha senha
+POST {{baseUrl}}/forgot-password
+Content-Type: application/json
+
+{
+  "email": "contato@teste.com"
+}
+
+# ==========================================
+# TASKS (Requer userId)
+# ==========================================
+
+### Listar Tarefas do Usuário
+GET {{baseUrl}}/tasks?userId={{userId}}
+
+### Criar Nova Tarefa (Com prioridade se for na aba 'Hoje')
 POST {{baseUrl}}/tasks
 Content-Type: application/json
 
 {
-  "title": "Treinar recepção de vôlei",
-  "description": "Focar em manter o braço estendido e base baixa"
+  "title": "Configurar Husky e Lint-staged",
+  "description": "Garantir Clean Code antes dos commits",
+  "isPriority": true,
+  "userId": "b5820cf5-908b-42fa-9fe0-09cb9134392b"
 }
 
-### Armazenar o ID da tarefa criada para os próximos testes
-@taskId = {{createTask.response.body.id}}
-
-### Atualizar tarefa para 'Em Progresso' (Kanban)
-PATCH {{baseUrl}}/tasks/{{taskId}}
+### Atualizar Status da Tarefa
+PATCH {{baseUrl}}/tasks/ID_DA_TASK_AQUI
 Content-Type: application/json
 
 {
-  "isDoing": true
+  "userId": "{{userId}}",
+  "completed": true,
+  "isDoing": false
 }
 
-### Marcar como Prioridade (Aba Hoje)
-PATCH {{baseUrl}}/tasks/{{taskId}}
-Content-Type: application/json
-
-{
-  "isPriority": true
-}
-
-### Concluir a tarefa
-PATCH {{baseUrl}}/tasks/{{taskId}}
-Content-Type: application/json
-
-{
-  "completed": true
-}
-
-### Deletar a tarefa
-DELETE {{baseUrl}}/tasks/{{taskId}}
+### Deletar Tarefa
+DELETE {{baseUrl}}/tasks/ID_DA_TASK_AQUI?userId={{userId}}
