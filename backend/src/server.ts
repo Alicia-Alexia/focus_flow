@@ -44,9 +44,21 @@ app.ready().then(() => {
   console.log('✅ Swagger carregado com sucesso!');
 });
 
-if (process.env.NODE_ENV !== 'test') {
-  app.listen({ port: 3333 }).catch((err) => {
+// 1. Garanta que a porta seja um número, usando um fallback seguro (ex: 3333)
+const PORT = Number(process.env.PORT) || 3333;
+
+const start = async () => {
+  try {
+    // 2. Passe a porta e o host dentro do objeto esperado pelo Fastify
+    await app.listen({ 
+      port: PORT, 
+      host: '0.0.0.0' // Importante para o deploy (Render/Railway) funcionar!
+    });
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  } catch (err) {
     app.log.error(err);
     process.exit(1);
-  });
-}
+  }
+};
+
+start();
