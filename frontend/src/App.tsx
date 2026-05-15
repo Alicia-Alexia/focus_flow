@@ -5,10 +5,14 @@ import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { Dashboard } from './pages/Dashboard'; 
 import { authService } from './services/auth';
+import type { JSX } from 'react/jsx-dev-runtime';
+
+function PrivateRoute({ children }: { children: JSX.Element }) {
+  const user = authService.getUser();
+  return user ? children : <Navigate to="/login" />;
+}
 
 export function App() {
-  const isAuthenticated = !!authService.getUser(); 
-
   return (
     <BrowserRouter>
       <Routes>
@@ -18,7 +22,11 @@ export function App() {
 
         <Route 
           path="/dashboard" 
-          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          } 
         />
 
         <Route path="*" element={<Navigate to="/login" />} />
