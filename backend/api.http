@@ -13,8 +13,8 @@ Content-Type: application/json
 
 {
   "name": "Testando",
-  "email": "contato@teste.com",
-  "password": "senha_segura_123"
+  "email": "teste@teste.com",
+  "password": "sua_senha"
 }
 
 ### Realizar Login
@@ -23,8 +23,8 @@ POST {{baseUrl}}/sessions
 Content-Type: application/json
 
 {
-  "email": "contato@teste.com",
-  "password": "senha_segura_123"
+  "email": "teste@teste.com",
+  "password": "sua_senha"
 }
 
 ### Esqueci minha senha
@@ -32,7 +32,7 @@ POST {{baseUrl}}/forgot-password
 Content-Type: application/json
 
 {
-  "email": "contato@teste.com"
+  "email": "teste@teste.com"
 }
 
 # ==========================================
@@ -54,7 +54,7 @@ Content-Type: application/json
   "title": "Configurar Husky e Lint-staged",
   "description": "Garantir Clean Code antes dos commits",
   "isPriority": true,
-  "userId": "b5820cf5-908b-42fa-9fe0-09cb9134392b"
+  "userId": "{{userId}}"
 }
 
 ### Atualizar Status da Tarefa
