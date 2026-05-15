@@ -2,27 +2,30 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
-import { api } from '../services/api';
+
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  async function handleLogin(e: React.SyntheticEvent) {
-    e.preventDefault();
-    try {
-      const response = await api.post('/sessions', { email, password });
-      authService.saveUser(response.data.user);
+async function handleLogin(e: React.FormEvent) {
+  e.preventDefault();
+  
+  try {
+    const response = await authService.login(email, password);
+    
+    if (response && response.user) {
+      authService.saveUser(response.user); 
       navigate('/dashboard');
-    } catch (error: any) {
-      alert(error.response?.data?.message || "Erro ao conectar com o servidor");
     }
+  } catch (error) {
+    console.error("Erro no login:", error);
   }
+}
 
   return (
     <div className="min-h-screen bg-[#0f111a] flex flex-col items-center justify-center p-4 font-sans">
-      {/* Header do Logo */}
       <div className="flex flex-col items-center mb-8">
         <div className="flex items-center gap-2 mb-2">
           <div className="grid grid-cols-3 gap-0.5">
@@ -35,10 +38,8 @@ export function Login() {
         <p className="text-slate-500 text-sm font-medium">Sua jornada de alta performance começa aqui.</p>
       </div>
 
-      {/* Card de Login */}
       <div className="w-full max-w-md bg-[#161925] border border-slate-800 p-8 rounded-3xl shadow-2xl">
         <form onSubmit={handleLogin}>
-          {/* Campo E-mail */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-400 ml-1">E-mail</label>
             <div className="relative group">
@@ -53,7 +54,6 @@ export function Login() {
             </div>
           </div>
 
-          {/* Campo Senha */}
           <div className="space-y-2">
             <div className="flex justify-between items-center px-1">
               <label className="text-sm font-semibold text-slate-400">Senha</label>
@@ -76,7 +76,6 @@ export function Login() {
             </div>
           </div>
 
-          {/* Botão de Entrar */}
           <button
             type="submit"
             className="w-full bg-indigo-500 hover:bg-indigo-400 text-[#0f111a] font-black py-4 rounded-2xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 active:scale-[0.98]"
@@ -87,7 +86,6 @@ export function Login() {
         </form>
       </div>
 
-      {/* Footer */}
       <p className="mt-8 text-slate-500 text-sm font-medium">
         Não tem uma conta?{' '}
         <Link to="/register" className="text-indigo-400 font-bold hover:underline transition-all">
