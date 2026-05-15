@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Search, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -24,45 +24,90 @@ export function Dashboard() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<{ id: string, title: string } | null>(null);
 
-  const user = authService.getUser();
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+const fetchTasks = useCallback(async () => {
+  const storedData = authService.getUser();
+  const userId = storedData?.id || storedData?.user?.id;
+  if (!userId) {
+    return;
+  }
+
+  try {
+    const res = await api.get(`/tasks?userId=${userId}`);
+  
+    const data = Array.isArray(res.data) ? res.data : (res.data.tasks || []);
+    setTasks(data);
+    
+  } catch (error) {
+  }
+}, []);
+useEffect(() => {
+  const userFromStorage = authService.getUser();
+  const id = userFromStorage?.id || userFromStorage?._id;
+
+  if (id) {
+    setCurrentUser(userFromStorage);
+    fetchTasks();
+  } else {
+    navigate('/login');
+  }
+}, [currentTab, fetchTasks, navigate]);
+
+  useEffect(() => {
+    const storedUser = authService.getUser();
+    if (storedUser) {
+      setCurrentUser(storedUser);
+    } else {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const id = currentUser?.id || currentUser?._id;
+    if (id) {
+      fetchTasks();
+    }
+  }, [currentUser?.id, currentUser?._id, currentTab])
+  useEffect(() => {
+    const storedUser = authService.getUser();
+    if (storedUser) {
+      setCurrentUser(storedUser);
+      fetchTasks();
+    } else {
+      navigate('/login');
+    }
+  }, [navigate, fetchTasks]);
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      if (currentTab === 'today') {
+        return matchesSearch && !task.completed;
+      }
+      return matchesSearch;
+    });
+  }, [tasks, searchQuery, currentTab]);
+
+  const userId = currentUser?.id || currentUser?._id;
 
   function handleLogout() {
     authService.logout();
     navigate('/login');
   }
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
-      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
-      if (currentTab === 'today') {
-        return matchesSearch && task.isPriority && !task.completed;
-      }
-      return matchesSearch;
-    });
-  }, [tasks, searchQuery, currentTab]);
-
-  async function fetchTasks() {
-    if (!user?.id) return;
-    try {
-      const res = await api.get(`/tasks?userId=${user.id}`);
-      setTasks(res.data);
-    } catch (error) {
-      console.error("Erro ao buscar tarefas:", error);
-    }
-  }
-
   async function handleCreateTask(e: React.SyntheticEvent) {
     e.preventDefault();
-    if (!title.trim() || !user?.id) return;
-    const priorityStatus = currentTab === 'today';
+    if (!title.trim() || !userId) return;
 
     try {
       await api.post('/tasks', {
         title,
         description: description || "",
-        isPriority: priorityStatus,
-        userId: user.id
+        isPriority: currentTab === 'today',
+        userId
       });
 
       setTitle('');
@@ -74,12 +119,12 @@ export function Dashboard() {
   }
 
   async function handleUpdateTask(id: string) {
-    if (!user?.id) return;
+    if (!userId) return;
     try {
       await api.patch(`/tasks/${id}`, {
         title: editTitle,
         description: editDescription,
-        userId: user.id
+        userId
       });
       setEditingId(null);
       fetchTasks();
@@ -90,32 +135,30 @@ export function Dashboard() {
 
   async function toggleTaskStatus(id: string, completed: boolean) {
     const task = tasks.find(t => t.id === id);
-    if (!task || !user?.id) return;
+    if (!task || !userId) return;
 
     try {
-      const basePayload = { userId: user.id };
-
       if (currentTab === 'upcoming') {
         if (!task.isDoing && !task.completed) {
-          await api.patch(`/tasks/${id}`, { ...basePayload, isDoing: true });
+          await api.patch(`/tasks/${id}`, { userId, isDoing: true });
         } else if (task.isDoing && !task.completed) {
-          await api.patch(`/tasks/${id}`, { ...basePayload, isDoing: false, completed: true });
+          await api.patch(`/tasks/${id}`, { userId, isDoing: false, completed: true });
         } else if (task.completed) {
-          await api.patch(`/tasks/${id}`, { ...basePayload, completed: false, isDoing: false });
+          await api.patch(`/tasks/${id}`, { userId, completed: false, isDoing: false });
         }
       } else {
-        await api.patch(`/tasks/${id}`, { ...basePayload, completed: !completed });
+        await api.patch(`/tasks/${id}`, { userId, completed: !completed });
       }
-      await fetchTasks();
+      fetchTasks();
     } catch (error) {
       console.error("Erro ao transicionar status:", error);
     }
   }
 
   async function confirmDelete() {
-    if (!taskToDelete || !user?.id) return;
+    if (!taskToDelete || !userId) return;
     try {
-      await api.delete(`/tasks/${taskToDelete.id}?userId=${user.id}`);
+      await api.delete(`/tasks/${taskToDelete.id}?userId=${userId}`);
       setIsDeleteModalOpen(false);
       setTaskToDelete(null);
       fetchTasks();
@@ -124,57 +167,41 @@ export function Dashboard() {
     }
   }
 
-  async function handleToggleDoing(id: string, currentIsDoing: boolean) {
-    if (!user?.id) return;
-    try {
-      await api.patch(`/tasks/${id}`, { isDoing: !currentIsDoing, userId: user.id });
-      await fetchTasks();
-    } catch (error) {
-      console.error("Erro ao mudar para progresso:", error);
-    }
-  }
-
-  async function handleTogglePriority(id: string, currentPriority: boolean) {
-    if (!user?.id) return;
-    try {
-      await api.patch(`/tasks/${id}`, { isPriority: !currentPriority, userId: user.id });
-      await fetchTasks();
-    } catch (error) {
-      console.error("Erro ao atualizar prioridade:", error);
-    }
-  }
-
-  function openDeleteModal(task: { id: string, title: string }) {
-    setTaskToDelete(task);
-    setIsDeleteModalOpen(true);
-  }
-
-  function startEditing(task: any) {
-    setEditingId(task.id);
-    setEditTitle(task.title);
-    setEditDescription(task.description || '');
-  }
-
-  const inputProps = {
-    title, setTitle, description, setDescription, handleCreateTask
-  };
-
   const cardProps = {
     editingId, editTitle, setEditTitle, editDescription, setEditDescription,
-    toggleTaskStatus, startEditing, handleUpdateTask,
+    toggleTaskStatus, 
+    startEditing: (task: any) => {
+      setEditingId(task.id);
+      setEditTitle(task.title);
+      setEditDescription(task.description || '');
+    },
+    handleUpdateTask,
     cancelEditing: () => setEditingId(null),
-    handleToggleDoing, handleTogglePriority,
+    handleToggleDoing: async (id: string, currentIsDoing: boolean) => {
+      if (!userId) return;
+      await api.patch(`/tasks/${id}`, { isDoing: !currentIsDoing, userId });
+      fetchTasks();
+    },
+    handleTogglePriority: async (id: string, currentPriority: boolean) => {
+      if (!userId) return;
+      await api.patch(`/tasks/${id}`, { isPriority: !currentPriority, userId });
+      fetchTasks();
+    },
     deleteTask: (id: string) => {
       const task = tasks.find(t => t.id === id);
-      if (task) openDeleteModal({ id: task.id, title: task.title });
+      if (task) {
+        setTaskToDelete({ id: task.id, title: task.title });
+        setIsDeleteModalOpen(true);
+      }
     },
   };
 
-  useEffect(() => { fetchTasks(); }, []);
+  if (!currentUser) return null;
 
   return (
     <div className="flex min-h-screen bg-[#0f111a] text-slate-300 font-sans">
       <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      
       <main className="flex-1 p-10 overflow-y-auto">
         <header className="flex justify-between items-center mb-10">
           <div>
@@ -183,6 +210,7 @@ export function Dashboard() {
             </h1>
             <p className="text-slate-500 font-medium tracking-tight">Terça-feira, 12 de Maio</p>
           </div>
+
           <div className="flex flex-col items-end gap-4">
             <button
               onClick={handleLogout}
@@ -191,6 +219,7 @@ export function Dashboard() {
               <span className="opacity-0 group-hover:opacity-100 transition-opacity">Sair da conta</span>
               <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
+
             <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-slate-600 transition-colors">
               <Search size={18} className="text-slate-500" />
               <input
@@ -204,14 +233,18 @@ export function Dashboard() {
         </header>
 
         <div className={currentTab === 'upcoming' ? 'mb-12' : 'mb-6'}>
-          <TaskInput {...inputProps} />
+          <TaskInput 
+            title={title} setTitle={setTitle} 
+            description={description} setDescription={setDescription} 
+            handleCreateTask={handleCreateTask} 
+          />
         </div>
 
         {currentTab === 'today' ? (
           <div className="grid gap-4">
             <div className="flex items-center justify-between px-2 mb-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Minhas Prioridades
+                Minhas Tarefas
               </span>
             </div>
             {filteredTasks.length > 0 ? (
@@ -220,7 +253,7 @@ export function Dashboard() {
               ))
             ) : (
               <div className="text-center py-20 bg-[#161925] rounded-3xl border border-dashed border-slate-800 text-slate-600">
-                Nenhuma prioridade para hoje.
+                Nenhuma tarefa pendente.
               </div>
             )}
           </div>
