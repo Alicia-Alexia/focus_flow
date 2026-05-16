@@ -3,6 +3,7 @@ import { Search, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { authService } from '../services/auth';
+import toast from 'react-hot-toast';
 
 import { Sidebar } from '../components/Sidebar';
 import { TaskInput } from '../components/TaskInput';
@@ -93,8 +94,14 @@ export function Dashboard() {
       setTitle('');
       setDescription('');
       fetchTasks();
+      toast.success("Tarefa criada com sucesso!", {
+      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+    });
     } catch (error) {
       console.error("Erro ao criar tarefa:", error);
+      toast.error("Erro ao criar tarefa.", {
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
     }
   }
 
@@ -108,8 +115,14 @@ export function Dashboard() {
       });
       setEditingId(null);
       fetchTasks();
+      toast.success("Tarefa atualizada!", {
+      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+    });
     } catch (error) {
       console.error("Erro ao atualizar:", error);
+      toast.error("Erro ao atualizar tarefa.", {
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
     }
   }
 
@@ -142,8 +155,15 @@ export function Dashboard() {
       setIsDeleteModalOpen(false);
       setTaskToDelete(null);
       fetchTasks();
+      toast.success("Tarefa removida!", {
+      icon: '🗑️',
+      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+    });
     } catch (error) {
       console.error("Erro ao deletar:", error);
+      toast.error("Não foi possível deletar a tarefa.", {
+      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+    });
     }
   }
 

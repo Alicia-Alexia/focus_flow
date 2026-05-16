@@ -2,25 +2,40 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
-
+import toast from 'react-hot-toast';
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-async function handleLogin(e: React.FormEvent) {
+async function handleLogin(e: React.SyntheticEvent<HTMLFormElement>) {
   e.preventDefault();
+
+  if (!email.trim() || !password.trim()) {
+    toast.error("Por favor, preencha todos os campos!", {
+      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+    });
+    return;
+  }
   
   try {
     const response = await authService.login(email, password);
     
     if (response && response.user) {
       authService.saveUser(response.user); 
+      toast.success("Login realizado com sucesso! Seja bem-vinda.", {
+      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+    });
       navigate('/dashboard');
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro no login:", error);
+    const errorMsg = error.response?.data?.message || "E-mail ou senha incorretos.";
+    
+    toast.error(errorMsg, {
+      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+    });
   }
 }
 

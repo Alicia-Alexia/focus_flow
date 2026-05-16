@@ -2,7 +2,8 @@ import React from 'react';
 import { Mail, Lock, User, UserPlus, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../services/api'; 
+import { api } from '../services/api';
+import { toast } from 'react-hot-toast';
 
 export function Register() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -10,10 +11,12 @@ export function Register() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
-    
+    e.preventDefault();
+
     if (!formData.name || !formData.email || !formData.password) {
-      alert("Por favor, preencha todos os campos.");
+      toast.error("Por favor, preencha todos os campos!", {
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
       return;
     }
 
@@ -26,12 +29,15 @@ export function Register() {
         password: formData.password
       });
 
-      alert("Conta criada com sucesso!");
+      toast.success("Conta criada com sucesso!", {
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
       navigate('/login');
     } catch (error: any) {
-      console.error("Erro no cadastro:", error);
       const errorMsg = error.response?.data?.message || "Erro ao criar conta. Verifique os dados.";
-      alert(errorMsg);
+      toast.error(errorMsg, {
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
     } finally {
       setLoading(false);
     }
@@ -55,7 +61,7 @@ export function Register() {
                 placeholder="Como quer ser chamado?"
                 value={formData.name}
                 className="w-full bg-[#1c2130] border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white outline-none focus:border-indigo-500/50 transition-all"
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
           </div>
@@ -69,7 +75,7 @@ export function Register() {
                 placeholder="seu@exemplo.com"
                 value={formData.email}
                 className="w-full bg-[#1c2130] border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white outline-none focus:border-indigo-500/50 transition-all"
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
           </div>
@@ -83,12 +89,12 @@ export function Register() {
                 placeholder="Crie uma senha forte"
                 value={formData.password}
                 className="w-full bg-[#1c2130] border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white outline-none focus:border-indigo-500/50 transition-all"
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={loading}
             className="w-full bg-indigo-500 hover:bg-indigo-400 disabled:bg-indigo-500/50 disabled:cursor-not-allowed text-[#0f111a] font-black py-4 rounded-2xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 mt-4"

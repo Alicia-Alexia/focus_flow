@@ -6,6 +6,7 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { Dashboard } from './pages/Dashboard'; 
 import { authService } from './services/auth';
 import type { JSX } from 'react/jsx-dev-runtime';
+import { Toaster } from 'react-hot-toast';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const user = authService.getUser();
@@ -15,6 +16,7 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
 export function App() {
   return (
     <BrowserRouter>
+    <Toaster position="top-right" reverseOrder={false} />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
