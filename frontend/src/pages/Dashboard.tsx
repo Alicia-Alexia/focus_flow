@@ -58,13 +58,16 @@ export function Dashboard() {
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const taskTitle = task.title ? task.title.toLowerCase() : '';
+      const matchesSearch = taskTitle.includes(searchQuery.toLowerCase());
+
+      if (!matchesSearch) return false;
       
       if (currentTab === 'today') {
-        return matchesSearch && task.isPriority && !task.completed;
+        return task.isPriority && !task.completed;
       }
       
-      return matchesSearch && !task.isPriority;
+      return true
     });
   }, [tasks, searchQuery, currentTab]);
 
