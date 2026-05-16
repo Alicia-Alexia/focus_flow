@@ -1,7 +1,7 @@
 import axios from 'axios';
 
- // @ts-ignore
-const url = process.env.URL_API;
+const url = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+
 export const api = axios.create({
-  baseURL: url, 
+  baseURL: url,
 });
