@@ -2,7 +2,7 @@ import { LayoutDashboard, Calendar, Settings } from 'lucide-react';
 
 interface SidebarProps {
   currentTab: string;
-  setCurrentTab: (tab: 'today' | 'upcoming') => void;
+  setCurrentTab: (tab: 'today' | 'upcoming' | 'settings') => void;
 }
 
 export function Sidebar({ currentTab, setCurrentTab }: SidebarProps) {
@@ -16,6 +16,7 @@ export function Sidebar({ currentTab, setCurrentTab }: SidebarProps) {
       </div>
 
       <nav className="flex flex-col gap-2 text-sm">
+        
         <button 
           onClick={() => setCurrentTab('today')}
           className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors ${
@@ -24,6 +25,7 @@ export function Sidebar({ currentTab, setCurrentTab }: SidebarProps) {
         >
           <LayoutDashboard size={18} /> Hoje
         </button>
+
         <button 
           onClick={() => setCurrentTab('upcoming')}
           className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors ${
@@ -32,9 +34,18 @@ export function Sidebar({ currentTab, setCurrentTab }: SidebarProps) {
         >
           <Calendar size={18} /> Próximos
         </button>
-        <button className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-lg transition-all text-slate-500 hover:text-slate-200">
+
+        <button 
+          onClick={() => setCurrentTab('settings')} 
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all ${
+            currentTab === 'settings' 
+              ? 'bg-indigo-600/10 text-indigo-400' 
+              : 'text-slate-500 hover:text-slate-200'
+          }`}
+        >
           <Settings size={18} /> Configurações
         </button>
+
       </nav>
     </aside>
   );

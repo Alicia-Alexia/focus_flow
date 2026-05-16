@@ -10,13 +10,14 @@ import { TaskInput } from '../components/TaskInput';
 import { TaskCard } from '../components/TaskCard';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { DeleteModal } from '../components/DeleteModal';
+import { SettingsView } from '../components/SettingsView';
 
 export function Dashboard() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentTab, setCurrentTab] = useState<'today' | 'upcoming'>('today');
+  const [currentTab, setCurrentTab] = useState<'today' | 'upcoming' | 'settings'>('today');
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -63,11 +64,11 @@ export function Dashboard() {
       const matchesSearch = taskTitle.includes(searchQuery.toLowerCase());
 
       if (!matchesSearch) return false;
-      
+
       if (currentTab === 'today') {
         return task.isPriority && !task.completed;
       }
-      
+
       return true
     });
   }, [tasks, searchQuery, currentTab]);
@@ -87,7 +88,7 @@ export function Dashboard() {
       await api.post('/tasks', {
         title,
         description: description || "",
-        isPriority: currentTab === 'today', 
+        isPriority: currentTab === 'today',
         userId
       });
 
@@ -95,8 +96,8 @@ export function Dashboard() {
       setDescription('');
       fetchTasks();
       toast.success("Tarefa criada com sucesso!", {
-      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
-    });
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
     } catch (error) {
       console.error("Erro ao criar tarefa:", error);
       toast.error("Erro ao criar tarefa.", {
@@ -116,8 +117,8 @@ export function Dashboard() {
       setEditingId(null);
       fetchTasks();
       toast.success("Tarefa atualizada!", {
-      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
-    });
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
     } catch (error) {
       console.error("Erro ao atualizar:", error);
       toast.error("Erro ao atualizar tarefa.", {
@@ -156,20 +157,20 @@ export function Dashboard() {
       setTaskToDelete(null);
       fetchTasks();
       toast.success("Tarefa removida!", {
-      icon: '🗑️',
-      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
-    });
+        icon: '🗑️',
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
     } catch (error) {
       console.error("Erro ao deletar:", error);
       toast.error("Não foi possível deletar a tarefa.", {
-      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
-    });
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
     }
   }
 
   const cardProps = {
     editingId, editTitle, setEditTitle, editDescription, setEditDescription,
-    toggleTaskStatus, 
+    toggleTaskStatus,
     startEditing: (task: any) => {
       setEditingId(task.id);
       setEditTitle(task.title);
@@ -201,29 +202,34 @@ export function Dashboard() {
   return (
     <div className="flex min-h-screen bg-[#0f111a] text-slate-300 font-sans">
       <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
-      
+
       <main className="flex-1 p-10 overflow-y-auto">
         <header className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-1">
-              {currentTab === 'today' ? 'Hoje' : 'Próximos'}
+            <h1 className="text-4xl font-bold text-indigo-500 mb-2 transition-colors">
+              {currentTab === 'today' && 'Hoje'}
+              {currentTab === 'upcoming' && 'Próximos'}
+              {currentTab === 'settings' && 'Configurações'}
             </h1>
-            <p className="text-slate-500 font-medium tracking-tight">Terça-feira, 12 de Maio</p>
+
+            <p className="text-indigo-500 opacity-60 font-medium tracking-tight text-sm transition-all">
+              Terça-feira, 12 de Maio
+            </p>
           </div>
 
           <div className="flex flex-col items-end gap-4">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-400 transition-all group"
+              className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-500 transition-all group"
             >
               <span className="opacity-0 group-hover:opacity-100 transition-opacity">Sair da conta</span>
               <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
 
-            <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-slate-600 transition-colors">
-              <Search size={18} className="text-slate-500" />
+            <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-indigo-500 transition-colors group">
+              <Search size={18} className="text-slate-500 group-focus-within:text-indigo-500 transition-colors" />
               <input
-                className="bg-transparent outline-none text-sm placeholder:text-slate-600 w-full"
+                className="bg-transparent outline-none text-sm placeholder:text-slate-600 w-full text-slate-200"
                 placeholder="Buscar tarefas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -232,21 +238,24 @@ export function Dashboard() {
           </div>
         </header>
 
-        <div className={currentTab === 'upcoming' ? 'mb-12' : 'mb-6'}>
-          <TaskInput 
-            title={title} setTitle={setTitle} 
-            description={description} setDescription={setDescription} 
-            handleCreateTask={handleCreateTask} 
-          />
-        </div>
+        {currentTab !== 'settings' && (
+          <div className={currentTab === 'upcoming' ? 'mb-12' : 'mb-6'}>
+            <TaskInput
+              title={title} setTitle={setTitle}
+              description={description} setDescription={setDescription}
+              handleCreateTask={handleCreateTask}
+            />
+          </div>
+        )}
 
-        {currentTab === 'today' ? (
+        {currentTab === 'today' && (
           <div className="grid gap-4">
             <div className="flex items-center justify-between px-2 mb-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                 Minhas Tarefas
               </span>
             </div>
+
             {filteredTasks.length > 0 ? (
               filteredTasks.map(task => (
                 <TaskCard key={task.id} task={task} {...cardProps} />
@@ -257,8 +266,14 @@ export function Dashboard() {
               </div>
             )}
           </div>
-        ) : (
+        )}
+
+        {currentTab === 'upcoming' && (
           <KanbanBoard tasks={filteredTasks} {...cardProps} />
+        )}
+
+        {currentTab === 'settings' && (
+          <SettingsView />
         )}
 
         <DeleteModal

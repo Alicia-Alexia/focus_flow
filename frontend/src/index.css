@@ -2,8 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-[#0f111a] text-slate-200; 
+
+:root {
+  --color-target: 99 102 241; 
+}
+
+[data-theme="emerald"] {
+  --color-target: 16 185 129; 
+}
+
+[data-theme="cyan"] {
+  --color-target: 6 182 212; 
+}
+
+[data-theme="rose"] {
+  --color-target: 244 63 94; 
+}
+
+
+@layer utilities {
+
+  .bg-indigo-500 {
+    background-color: rgb(var(--color-target)) !important;
+  }
+
+  .text-indigo-500, .text-indigo-400 {
+    color: rgb(var(--color-target)) !important;
+  }
+
+  .border-indigo-500, .focus\:border-indigo-500:focus {
+    border-color: rgb(var(--color-target)) !important;
+  }
+
+  .hover\:bg-indigo-400:hover {
+    background-color: rgb(var(--color-target)) !important;
+    filter: brightness(1.1);
   }
 }
