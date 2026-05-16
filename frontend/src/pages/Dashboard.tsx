@@ -27,71 +27,48 @@ export function Dashboard() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-const fetchTasks = useCallback(async () => {
-  const storedData = authService.getUser();
-  const userId = storedData?.id || storedData?.user?.id;
-  if (!userId) {
-    return;
-  }
+  const fetchTasks = useCallback(async () => {
+    const storedData = authService.getUser();
+    const userId = storedData?.id || storedData?.user?.id;
+    if (!userId) return;
 
-  try {
-    const res = await api.get(`/tasks?userId=${userId}`);
-  
-    const data = Array.isArray(res.data) ? res.data : (res.data.tasks || []);
-    setTasks(data);
-    
-  } catch (error) {
-  }
-}, []);
-useEffect(() => {
-  const userFromStorage = authService.getUser();
-  const id = userFromStorage?.id || userFromStorage?._id;
-
-  if (id) {
-    setCurrentUser(userFromStorage);
-    fetchTasks();
-  } else {
-    navigate('/login');
-  }
-}, [currentTab, fetchTasks, navigate]);
+    try {
+      const res = await api.get(`/tasks?userId=${userId}`);
+      const data = Array.isArray(res.data) ? res.data : (res.data.tasks || []);
+      setTasks(data);
+    } catch (error) {
+      console.error("Erro ao buscar tarefas:", error);
+    }
+  }, []);
 
   useEffect(() => {
-    const storedUser = authService.getUser();
-    if (storedUser) {
-      setCurrentUser(storedUser);
+    const userFromStorage = authService.getUser();
+    if (userFromStorage) {
+      setCurrentUser(userFromStorage);
     } else {
       navigate('/login');
     }
   }, [navigate]);
 
   useEffect(() => {
-    const id = currentUser?.id || currentUser?._id;
-    if (id) {
+    if (currentUser) {
       fetchTasks();
     }
-  }, [currentUser?.id, currentUser?._id, currentTab])
-  useEffect(() => {
-    const storedUser = authService.getUser();
-    if (storedUser) {
-      setCurrentUser(storedUser);
-      fetchTasks();
-    } else {
-      navigate('/login');
-    }
-  }, [navigate, fetchTasks]);
+  }, [currentUser, currentTab, fetchTasks]);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
       
       if (currentTab === 'today') {
-        return matchesSearch && !task.completed;
+        return matchesSearch && task.isPriority && !task.completed;
       }
-      return matchesSearch;
+      
+      return matchesSearch && !task.isPriority;
     });
   }, [tasks, searchQuery, currentTab]);
 
-  const userId = currentUser?.id || currentUser?._id;
+  const userId = currentUser?.id || currentUser?.user?.id || currentUser?._id;
 
   function handleLogout() {
     authService.logout();
@@ -106,7 +83,7 @@ useEffect(() => {
       await api.post('/tasks', {
         title,
         description: description || "",
-        isPriority: currentTab === 'today',
+        isPriority: currentTab === 'today', 
         userId
       });
 
@@ -253,7 +230,7 @@ useEffect(() => {
               ))
             ) : (
               <div className="text-center py-20 bg-[#161925] rounded-3xl border border-dashed border-slate-800 text-slate-600">
-                Nenhuma tarefa pendente.
+                Nenhuma tarefa pendente para hoje.
               </div>
             )}
           </div>
