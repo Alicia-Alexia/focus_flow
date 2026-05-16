@@ -9,36 +9,46 @@ export function Login() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-async function handleLogin(e: React.SyntheticEvent<HTMLFormElement>) {
-  e.preventDefault();
+  async function handleLogin(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-  if (!email.trim() || !password.trim()) {
-    toast.error("Por favor, preencha todos os campos!", {
-      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
-    });
-    return;
-  }
-  
-  try {
-    const response = await authService.login(email, password);
-    
-    if (response && response.user) {
-      authService.saveUser(response.user); 
-      toast.success("Login realizado com sucesso! Seja bem-vinda.", {
-      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
-    });
-      navigate('/dashboard');
+    if (!email.trim() || !password.trim()) {
+      toast.error("Por favor, preencha todos os campos!", {
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
+      return;
     }
-  } catch (error: any) {
-    console.error("Erro no login:", error);
-    const errorMsg = error.response?.data?.message || "E-mail ou senha incorretos.";
-    
-    toast.error(errorMsg, {
-      style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
-    });
-  }
-}
 
+    try {
+      const response = await authService.login(email, password);
+
+      if (response && response.user) {
+        authService.saveUser(response.user);
+        toast.success("Login realizado com sucesso! Seja bem-vinda.", {
+          style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+        });
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      console.error("Erro no login:", error);
+      const errorMsg = error.response?.data?.message || "E-mail ou senha incorretos.";
+
+      toast.error(errorMsg, {
+        style: { background: '#161925', color: '#fff', border: '1px solid #1e293b' }
+      });
+    }
+  }
+  const handleForgotLink = (e: React.MouseEvent) => {
+      e.preventDefault();
+      toast('Recuperação de senha em breve! Esta funcionalidade ainda não foi implementada.', {
+        icon: '🚀',
+        style: {
+          background: '#161925',
+          color: '#b4f4f4', // Se estiver no tema ciano, ou mude para a cor que preferir
+          border: '1px border-slate-800',
+        },
+      });
+    };
   return (
     <div className="min-h-screen bg-[#0f111a] flex flex-col items-center justify-center p-4 font-sans">
       <div className="flex flex-col items-center mb-8">
@@ -72,12 +82,12 @@ async function handleLogin(e: React.SyntheticEvent<HTMLFormElement>) {
           <div className="space-y-2">
             <div className="flex justify-between items-center px-1">
               <label className="text-sm font-semibold text-slate-400">Senha</label>
-              <Link
-                to="/forgot-password"
-                className="text-xs font-bold text-slate-500 hover:text-indigo-400 transition-colors"
+              <button
+                onClick={handleForgotLink}
+                className="text-xs text-slate-500 hover:text-indigo-400 transition-colors bg-transparent border-none cursor-pointer"
               >
                 Esqueceu a senha?
-              </Link>
+              </button>
             </div>
             <div className="relative group">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-500 transition-colors" size={20} />
