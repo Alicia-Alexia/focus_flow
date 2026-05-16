@@ -204,32 +204,36 @@ export function Dashboard() {
       <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
       <main className="flex-1 p-10 overflow-y-auto">
-        <header className="flex justify-between items-center mb-10">
+        <header className="flex justify-between items-center mb-12 border-b border-slate-800/50 pb-6">
           <div>
-            <h1 className="text-4xl font-bold text-indigo-500 mb-2 transition-colors">
+            <h1
+              className="text-5xl font-black tracking-tight mb-2 transition-all"
+              style={{ color: 'rgb(var(--color-target))' }}
+            >
               {currentTab === 'today' && 'Hoje'}
               {currentTab === 'upcoming' && 'Próximos'}
               {currentTab === 'settings' && 'Configurações'}
             </h1>
 
-            <p className="text-indigo-500 opacity-60 font-medium tracking-tight text-sm transition-all">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
               Terça-feira, 12 de Maio
-            </p>
+            </div>
           </div>
 
           <div className="flex flex-col items-end gap-4">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-500 transition-all group"
+              className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-indigo-500 transition-all group"
             >
-              <span className="opacity-0 group-hover:opacity-100 transition-opacity">Sair da conta</span>
+              <span className="opacity-0 group-hover:opacity-100 transition-all text-slate-400">Sair da conta</span>
               <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
 
-            <div className="flex items-center gap-4 bg-[#161925] px-4 py-2 rounded-xl border border-slate-800 focus-within:border-indigo-500 transition-colors group">
-              <Search size={18} className="text-slate-500 group-focus-within:text-indigo-500 transition-colors" />
+            <div className="flex items-center gap-4 bg-[#141622] px-5 py-3 rounded-2xl border border-slate-800/80 focus-within:border-indigo-500 focus-within:shadow-[0_0_20px_rgba(99,102,241,0.05)] transition-all w-72 group">
+              <Search size={18} className="text-slate-600 group-focus-within:text-indigo-500 transition-colors" />
               <input
-                className="bg-transparent outline-none text-sm placeholder:text-slate-600 w-full text-slate-200"
+                className="bg-transparent outline-none text-sm placeholder:text-slate-700 w-full text-slate-200 font-medium"
                 placeholder="Buscar tarefas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

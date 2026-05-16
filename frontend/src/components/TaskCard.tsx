@@ -25,7 +25,7 @@ export function TaskCard({
   const isEditing = editingId === task.id;
 
   return (
-    <div className="group bg-[#161925] p-5 rounded-2xl border border-slate-800 transition-all hover:border-indigo-500/30 hover:bg-[#1a1e2d] relative overflow-hidden">
+    <div className="group bg-[#161925] p-5 rounded-r-2xl rounded-l-lg border-y border-r border-l-0 border-slate-800 border-l-4 border-l-indigo-500 transition-all hover:border-indigo-500/30 hover:border-l-indigo-500 hover:bg-[#1a1e2d] relative overflow-hidden shadow-sm hover:shadow-[0_8px_30px_rgb(var(--color-target),0.04)]">
       {isEditing ? (
         <div className="flex flex-col gap-3 w-full">
           <input

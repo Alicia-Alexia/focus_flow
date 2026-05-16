@@ -21,21 +21,20 @@
 
 
 @layer utilities {
-
-  .bg-indigo-500 {
+  .bg-indigo-500, .bg-indigo-600 {
     background-color: rgb(var(--color-target)) !important;
   }
 
-  .text-indigo-500, .text-indigo-400 {
+  .text-indigo-500, .text-indigo-400, .text-indigo-600 {
     color: rgb(var(--color-target)) !important;
   }
 
-  .border-indigo-500, .focus\:border-indigo-500:focus {
+  .border-indigo-500, .border-indigo-600, .focus\:border-indigo-500:focus, .focus-within:border-indigo-500 {
     border-color: rgb(var(--color-target)) !important;
   }
 
-  .hover\:bg-indigo-400:hover {
+  .hover\:bg-indigo-400:hover, .hover\:bg-indigo-500:hover, .hover\:bg-indigo-600:hover {
     background-color: rgb(var(--color-target)) !important;
-    filter: brightness(1.1);
+    filter: brightness(1.1) !important;
   }
 }
