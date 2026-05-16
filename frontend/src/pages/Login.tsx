@@ -93,7 +93,7 @@ async function handleLogin(e: React.SyntheticEvent<HTMLFormElement>) {
 
           <button
             type="submit"
-            className="w-full bg-indigo-500 hover:bg-indigo-400 text-[#0f111a] font-black py-4 rounded-2xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 active:scale-[0.98]"
+            className="mt-5 w-full bg-indigo-500 hover:bg-indigo-400 text-[#0f111a] font-black py-4 rounded-2xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 active:scale-[0.98]"
           >
             <LogIn size={20} />
             Entrar na Conta
